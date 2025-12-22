@@ -1,57 +1,181 @@
-import java.util.*;
-import java.io.*;
-import java.math.*;
-
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+ 
 class Player {
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
-        int numberOfCells = in.nextInt(); // 37
+
+        Game game = new Game();
+
+        int numberOfCells = in.nextInt();
         for (int i = 0; i < numberOfCells; i++) {
-            int index = in.nextInt(); // 0 is the center cell, the next cells spiral outwards
-            int richness = in.nextInt(); // 0 if the cell is unusable, 1-3 for usable cells
-            int neigh0 = in.nextInt(); // the index of the neighbouring cell for each direction
+            int index = in.nextInt();
+            int richness = in.nextInt();
+            int neigh0 = in.nextInt();
             int neigh1 = in.nextInt();
             int neigh2 = in.nextInt();
             int neigh3 = in.nextInt();
             int neigh4 = in.nextInt();
             int neigh5 = in.nextInt();
+            int[] neighs = new int[]{neigh0, neigh1, neigh2, neigh3, neigh4, neigh5};
+            Cell cell = new Cell(index, richness, neighs);
+            game.board.add(cell);
         }
 
-        // game loop
         while (true) {
-            int day = in.nextInt(); // the game lasts 24 days: 0-23
-            int nutrients = in.nextInt(); // the base score you gain from the next COMPLETE action
-            int sun = in.nextInt(); // your sun points
-            int score = in.nextInt(); // your current score
-            int oppSun = in.nextInt(); // opponent's sun points
-            int oppScore = in.nextInt(); // opponent's score
-            boolean oppIsWaiting = in.nextInt() != 0; // whether your opponent is asleep until the next day
-            int numberOfTrees = in.nextInt(); // the current amount of trees
+            game.day = in.nextInt();
+            game.nutrients = in.nextInt();
+            game.mySun = in.nextInt();
+            game.myScore = in.nextInt();
+            game.opponentSun = in.nextInt();
+            game.opponentScore = in.nextInt();
+            game.opponentIsWaiting = in.nextInt() != 0;
+
+            game.trees.clear();
+            int numberOfTrees = in.nextInt();
             for (int i = 0; i < numberOfTrees; i++) {
-                int cellIndex = in.nextInt(); // location of this tree
-                int size = in.nextInt(); // size of this tree: 0-3
-                boolean isMine = in.nextInt() != 0; // 1 if this is your tree
-                boolean isDormant = in.nextInt() != 0; // 1 if this tree is dormant
+                int cellIndex = in.nextInt();
+                int size = in.nextInt();
+                boolean isMine = in.nextInt() != 0;
+                boolean isDormant = in.nextInt() != 0;
+                Tree tree = new Tree(cellIndex, size, isMine, isDormant);
+                game.trees.add(tree);
+                Action action = game.getNextAction(i);
+                System.out.println(action);
             }
-            int numberOfPossibleActions = in.nextInt(); // all legal actions
-            if (in.hasNextLine()) {
-                in.nextLine();
-            }
+
+            game.possibleActions.clear();
+            int numberOfPossibleActions = in.nextInt();
+            in.nextLine();
             for (int i = 0; i < numberOfPossibleActions; i++) {
-                String possibleAction = in.nextLine(); // try printing something from here to start with
+                String possibleAction = in.nextLine();
+                game.possibleActions.add(Action.parse(possibleAction));
             }
 
-            // Write an action using System.out.println()
-            // To debug: System.err.println("Debug messages...");
-
-
-            // GROW cellIdx | SEED sourceIdx targetIdx | COMPLETE cellIdx | WAIT <message>
-            System.out.println("WAIT");
         }
+        
+    }
+}
+
+class Cell {
+
+    int index;
+    int richness;
+    int[] neighbours;
+
+    public Cell(int index, int richness, int[] neighbours) {
+        this.index = index;
+        this.richness = richness;
+        this.neighbours = neighbours;
+    }
+}
+
+class Tree {
+
+    int cellIndex;
+    int size;
+    boolean isMine;
+    boolean isDormant;
+
+    public Tree(int cellIndex, int size, boolean isMine, boolean isDormant) {
+        this.cellIndex = cellIndex;
+        this.size = size;
+        this.isMine = isMine;
+        this.isDormant = isDormant;
+    }
+}
+
+class Action {
+
+    static final String WAIT = "WAIT";
+    static final String SEED = "SEED";
+    static final String GROW = "GROW";
+    static final String COMPLETE = "COMPLETE";
+    String type;
+    Integer targetCellIdx;
+    Integer sourceCellIdx;
+
+    public Action(String type, Integer sourceCellIdx, Integer targetCellIdx) {
+        this.type = type;
+        this.targetCellIdx = targetCellIdx;
+        this.sourceCellIdx = sourceCellIdx;
+    }
+
+    public Action(String type, Integer targetCellIdx) {
+        this(type, null, targetCellIdx);
+    }
+
+    public Action(String type) {
+        this(type, null, null);
+    }
+
+    static Action parse(String action) {
+        String[] parts = action.split(" ");
+        switch (parts[0]) {
+            case WAIT:
+                return new Action(WAIT);
+            case SEED:
+                return new Action(SEED, Integer.valueOf(parts[1]), Integer.valueOf(parts[2]));
+            case GROW:
+            case COMPLETE:
+            default:
+                return new Action(parts[0], Integer.valueOf(parts[1]));
+        }
+    }
+
+    @Override
+    public String toString() {
+        if (WAIT.equalsIgnoreCase(type)) {
+            return Action.WAIT;
+        }
+        if (SEED.equalsIgnoreCase(type)) {
+            return String.format("%s %d %d", SEED, sourceCellIdx, targetCellIdx);
+        }
+        return String.format("%s %d", type, targetCellIdx);
+    }
+}
+
+class Game {
+
+    int day;
+    int nutrients;
+    List<Cell> board;
+    List<Action> possibleActions;
+    List<Tree> trees;
+    int mySun, opponentSun;
+    int myScore, opponentScore;
+    boolean opponentIsWaiting;
+
+    public Game() {
+        board = new ArrayList<>();
+        possibleActions = new ArrayList<>();
+        trees = new ArrayList<>();
+    }
+
+    Action getNextAction(int index) {
+        // TODO: write your algorithm here
+        System.err.println(this.trees.size());
+        Action complete = new Action("COMPLETE", index);
+        Action seed = new Action("SEED", index);
+        Action grow = new Action("GROW", index);
+        Action wait = new Action("WAIT");
+        if(this.trees.get(index).isMine){
+            switch(this.trees.get(index).size){
+                case 0 :
+                    this.possibleActions.add(wait);
+                    break;
+                case 1 :
+                    this.possibleActions.add(seed);
+                    break;
+                case 2 :
+                    this.possibleActions.add(grow);
+                    break;
+                case 3 :
+                    this.possibleActions.add(complete);
+            }
+        }
+            return this.possibleActions.get(this.possibleActions.size()-1);
     }
 }
