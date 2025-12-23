@@ -44,7 +44,6 @@ class Player {
                 game.trees.add(tree);
                 if(tree.isMine){
                     Action action = game.getNextAction(tree);
-                    System.err.println(tree.cellIndex);
                     System.out.println(action);
                 }
             }
@@ -158,8 +157,6 @@ class Game {
     }
 
     Action getNextAction(Tree tree) {
-        // TODO: write your algorithm here
-        //System.err.println(this.trees.size());
         Action complete = new Action("COMPLETE", tree.cellIndex);
         Action seed = new Action("SEED", tree.cellIndex);
         Action grow = new Action("GROW", tree.cellIndex);
@@ -169,17 +166,14 @@ class Game {
                 case 0 :
                     this.possibleActions.add(seed);
                     return seed;
-                    //break;
                 case 1 :
                     tree.size++;
                     this.possibleActions.add(seed);
                     return seed;
-                    //break;
                 case 2 :
                     tree.size++;
                     this.possibleActions.add(grow);
                     return grow;
-                    //break;
                 case 3 :
                     tree.size = 0;
                     this.possibleActions.add(complete);
