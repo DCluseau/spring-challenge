@@ -42,8 +42,11 @@ class Player {
                 boolean isDormant = in.nextInt() != 0;
                 Tree tree = new Tree(cellIndex, size, isMine, isDormant);
                 game.trees.add(tree);
-                Action action = game.getNextAction(i);
-                System.out.println(action);
+                if(tree.isMine){
+                    Action action = game.getNextAction(tree);
+                    System.err.println(tree.cellIndex);
+                    System.out.println(action);
+                }
             }
 
             game.possibleActions.clear();
@@ -154,28 +157,37 @@ class Game {
         trees = new ArrayList<>();
     }
 
-    Action getNextAction(int index) {
+    Action getNextAction(Tree tree) {
         // TODO: write your algorithm here
-        System.err.println(this.trees.size());
-        Action complete = new Action("COMPLETE", index);
-        Action seed = new Action("SEED", index);
-        Action grow = new Action("GROW", index);
+        //System.err.println(this.trees.size());
+        Action complete = new Action("COMPLETE", tree.cellIndex);
+        Action seed = new Action("SEED", tree.cellIndex);
+        Action grow = new Action("GROW", tree.cellIndex);
         Action wait = new Action("WAIT");
-        if(this.trees.get(index).isMine){
-            switch(this.trees.get(index).size){
+        if(tree.isMine){
+            switch(tree.size){
                 case 0 :
-                    this.possibleActions.add(wait);
-                    break;
-                case 1 :
                     this.possibleActions.add(seed);
-                    break;
+                    return seed;
+                    //break;
+                case 1 :
+                    tree.size++;
+                    this.possibleActions.add(seed);
+                    return seed;
+                    //break;
                 case 2 :
+                    tree.size++;
                     this.possibleActions.add(grow);
-                    break;
+                    return grow;
+                    //break;
                 case 3 :
+                    tree.size = 0;
                     this.possibleActions.add(complete);
+                    return complete;
             }
-        }
             return this.possibleActions.get(this.possibleActions.size()-1);
+        }else{
+            return complete;
+        }
     }
 }
